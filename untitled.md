@@ -196,3 +196,11 @@ This is an example of loop unrolling from the book:
      }
  
  
+ Before we do a formal loop unrolling, we notice that the middle nested for loops don't actually need to be nested - we could just pull these out of the loop. Let's see what effect this has on our run time. 
+ If we just pull out the inner loop, our boats.bmp sees an improvement of about 100 cycles per - this is a score of 64. This is a somewhat noticeable improvement. 
+ 
+ Let's pull all of them out and see what we can do.
+ 
+ Doing this changes our run-time slightly; our score is now 65.
+ 
+ 
