@@ -65,6 +65,78 @@ We're given in the instructions that there is a central function that does a lot
     
 This seems like the best place to start, since we can clearly see that these nested loops are going to impact the time heavily. 
 
+One of the first things we notice is that the results are not accumulated in a temporary variable, and that there are memory references within the loop. Let's reduce this in our main function loop (this is an example of data movement)
+
+## Data Movement
+
+Let's change the memory references in our loops and see what difference this makes on our run time. 
+
+        double
+        applyFilter(struct Filter *filter, cs1300bmp *input, cs1300bmp *output)
+        {
+
+          long long cycStart, cycStop;
+
+          cycStart = rdtscll();
+
+          output -> width = input -> width;
+          output -> height = input -> height;
+            int limit_w = input -> width;
+            int limit_h = input -> height;
+            int filter_sz = filter -> getSize();
+
+          /* Remove memory access in loop by using temporary variables */
+          /*for(int col = 1; col < (input -> width) - 1; col = col + 1) {*/
+            for(int col = 1; col < limit_w - 1; col = col + 1) {
+            /*for(int row = 1; row < (input -> height) - 1 ; row = row + 1) {*/
+            for(int row = 1; row < limit_h - 1 ; row = row + 1) {    
+              for(int plane = 0; plane < 3; plane++) {
+
+            output -> color[plane][row][col] = 0;
+
+            /* Reduce procedure calls in the loop */
+            /*for (int j = 0; j < filter -> getSize(); j++) {*/
+              for (int j = 0; j < filter_sz; j++) {
+              /*for (int i = 0; i < filter -> getSize(); i++) {	*/
+                  for (int i = 0; i < filter_sz; i++) {	
+                    output -> color[plane][row][col]
+                      = output -> color[plane][row][col]
+                      + (input -> color[plane][row + i - 1][col + j - 1] 
+                     * filter -> get(i, j) );
+                  }
+            }
+
+            output -> color[plane][row][col] = 	
+              output -> color[plane][row][col] / filter -> getDivisor();
+
+            if ( output -> color[plane][row][col]  < 0 ) {
+              output -> color[plane][row][col] = 0;
+            }
+
+            if ( output -> color[plane][row][col]  > 255 ) { 
+              output -> color[plane][row][col] = 255;
+            }
+              }
+            }
+          }
+
+          cycStop = rdtscll();
+          double diff = cycStop - cycStart;
+          double diffPerPixel = diff / (output -> width * output -> height);
+          fprintf(stderr, "Took %f cycles to process, or %f cycles per pixel\n",
+              diff, diff / (output -> width * output -> height));
+          return diffPerPixel;
+        }
+
+Before we reduce the proceduce calls and memory references, our median CPE for the `boats.bmp` file is 1792. 
+
+After our changes, our median CPE is 1655. This is not a significant change, but still an improvement. 
+
+Let's keep going with our data movement and see whether we can implement any further improvements. 
+
+
+
+
 We know generally that loop unrolling is a great way to improve performance; let's give that a shot and see if we can get any noticeable improvements. 
 
 ## Loop Unrolling
