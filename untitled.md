@@ -132,8 +132,19 @@ Before we reduce the proceduce calls and memory references, our median CPE for t
 
 After our changes, our median CPE is 1655. This is not a significant change, but still an improvement. 
 
-Let's keep going with our data movement and see whether we can implement any further improvements. 
+We notice in our editing that we can reduce a memory access for filter -> getSize(); by assigning the value of 3 to the limit. This provides a change from 924 - 901. Not a giant change, but still helpful.
 
+We can also try to change the size of some of loop indexes to short integers. It did not provide a noticeable difference in run time, but we'll keep it anyways.
+
+Let's keep going with our data movement and see whether we can implement any further improvements.
+
+## Loop Ordering
+
+We notice that the ordering of the loops is suboptimal. 
+
+We want to follow the ordering that the memory will be accessed - plane, row, then column, not column, row, plane. 
+
+This provides a significant improvement in our performance; we now see a median CPE of 924. This is by far one of the most significant improvements we've made to the function.
 
 
 
