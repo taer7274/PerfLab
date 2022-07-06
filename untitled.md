@@ -204,3 +204,88 @@ This is an example of loop unrolling from the book:
  Doing this changes our run-time slightly; our score is now 65.
  
  
+ We notice that we can reduce the number of function calls by creating temporary variables for the filter values and divisor values. This provides an improvement of roughly 200 CPE per; this gives us a score of 71. 
+ 
+ 
+ We can reduce our memory calls even further, with the following implementation: 
+ 
+ This gives us a score of 75 - we're improving! 
+ 
+ Let's keep going and see if we can improve any further.
+ 
+ 
+ double
+applyFilter(struct Filter *filter, cs1300bmp *input, cs1300bmp *output)
+{
+
+  long long cycStart, cycStop;
+
+  cycStart = rdtscll();
+
+    /*output -> width = input -> width;*/
+    /*output -> height = input -> height;*/
+    
+    int limit_w = input -> width;
+    int limit_h = input -> height;
+    output -> width = limit_w;
+    output -> height = limit_h;
+    
+    int filter00 = filter->get(0,0);
+    int filter01 = filter->get(0,1);
+    int filter02 = filter->get(0,2);
+    
+    int filter10 = filter->get(1,0);
+    int filter11 = filter->get(1,1);
+    int filter12 = filter->get(1,2);
+    
+    int filter20 = filter->get(2,0);
+    int filter21 = filter->get(2,1);
+    int filter22 = filter->get(2,2);
+    
+    int div = filter -> getDivisor();
+
+    /* Loop ordering - plane, row, col, not other way around */
+    /* Remove memory access and procedure calls in loop by using temporary variables */
+    
+    for(short int plane = 0; plane < 3; plane++){
+        for(int row = 1; row < limit_h - 1; row++){
+            for(int col = 1; col < limit_w - 1; col++){
+                output -> color[plane][row][col] = 0;
+                
+                int acc = 0;
+                
+                /*j = 0*/
+                acc += (input -> color[plane][row + 0 - 1][col + 0 - 1] * filter00);
+                acc += (input -> color[plane][row + 1 - 1][col + 0 - 1] * filter10);
+                acc += (input -> color[plane][row + 2 - 1][col + 0 - 1] * filter20);
+                
+                /*j = 1*/
+                acc += (input -> color[plane][row + 0 - 1][col + 1 - 1] * filter01);
+                acc += (input -> color[plane][row + 1 - 1][col + 1 - 1] * filter11);
+                acc += (input -> color[plane][row + 2 - 1][col + 1 - 1] * filter21);
+                
+                /*j = 2*/
+                acc += (input -> color[plane][row + 0 - 1][col + 2 - 1] * filter02);
+                acc += (input -> color[plane][row + 1 - 1][col + 2 - 1] * filter12);
+                acc += (input -> color[plane][row + 2 - 1][col + 2 - 1] * filter22);
+                       
+            
+            output -> color[plane][row][col] = 
+              acc / div;
+
+            if ( output -> color[plane][row][col] < 0 ) {
+              output -> color[plane][row][col] = 0;
+            }
+                
+
+            if ( output -> color[plane][row][col]  > 255 ) { 
+              output -> color[plane][row][col] = 255;
+            }
+          }
+        }
+      }
+      
+      
+We can further reduce run time by replacing the conditional statements. This gives us a current score of 76 - our current CPE is 76.
+ 
+ 
