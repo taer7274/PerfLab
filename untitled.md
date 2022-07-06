@@ -287,5 +287,54 @@ applyFilter(struct Filter *filter, cs1300bmp *input, cs1300bmp *output)
       
       
 We can further reduce run time by replacing the conditional statements. This gives us a current score of 76 - our current CPE is 76.
+
+
+We can further improve the run-time by changing the values in the inner accesses to short integers. By making them constant, the compiler knows that they ...
+
+This gives an improvement - we are now at score 77.
+
+We can further reduce the number of memory accesses by storing values at the top for input -> [plane][row][col].
+
+We are now at score 79 - median cpe iS 319.
+
+
+Let's see if we can add multiple accumulators, and see if we get any improvement. 
+
+for(short int plane = 0; plane < 3; plane++){
+        for(short int row = 1; row < limit_h - 1; row++){
+            short int minrow = row - 1;
+            short int maxrow = row + 1;
+            for(short int col = 1; col < limit_w - 1; col++){
+                short int mincol = col - 1;
+                short int maxcol = col + 1;
+                
+                short int acc1 = 0;
+                short int acc2 = 0;
+                short int acc3 = 0;
+                
+                
+                /*j = 0*/
+                acc += input -> color[plane][minrow][mincol] * filter00;
+                acc += input -> color[plane][row][mincol] * filter10;
+                acc += (input -> color[plane][maxrow][mincol] * filter20);
+                
+                /*j = 1*/
+                acc += (input -> color[plane][minrow][col] * filter01);
+                acc += (input -> color[plane][row][col] * filter11);
+                acc += (input -> color[plane][maxrow][col] * filter21);
+                
+                /*j = 2*/
+                acc += (input -> color[plane][minrow][maxcol] * filter02);
+                acc += (input -> color[plane][row][maxcol] * filter12);
+                acc += (input -> color[plane][maxrow][maxcol] * filter22);
+                       
+            short int final_val = acc / div;
+            final_val = (final_val < 0) ? 0 : final_val;
+            final_val = (final_val > 255) ? 255 : final_val;
+            output -> color[plane][row][col] = final_val;
+           
+          }
+        }
+      }
  
  
