@@ -336,5 +336,14 @@ for(short int plane = 0; plane < 3; plane++){
           }
         }
       }
+      
+      
+There are not noticeable improvements in the loop when changing things around - let's leave this for now. 
+
+Let's try changing the flags and see what happens. 
+
+`-g -O0 -fno-omit-frame-pointer -Wall`
+These are the original flags. 
+
  
  
